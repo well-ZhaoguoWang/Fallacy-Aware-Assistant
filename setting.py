@@ -1,0 +1,5 @@
+deepseek_api_key = "92b3c38c-011e-43f5-adc2-77cf7a4b0e0a"
+r1_model_name = "deepseek-r1-250120"
+v3_model_name = "deepseek-v3-250324"
+deepseek_api_url = "https://ark.cn-beijing.volces.com/api/v3"
+serp_key = "76855083d51641befde40ac769ac56349291ebd3"

@@ -1,0 +1,7 @@
+requests~=2.32.3
+beautifulsoup4~=4.13.4
+openai~=1.82.0
+readability-lxml~=0.8.4.1
+requests~=2.32.3
+soupsieve~=2.7
+urllib3~=2.4.0
