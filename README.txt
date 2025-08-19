@@ -1,4 +1,5 @@
 Logic Checker — Fallacy-Aware-Assistant
+https://github.com/well-ZhaoguoWang/Fallacy-Aware-Assistant.git
 Please unzip my project, then open Google Chrome. Click the four-dot icon in the top-right corner, choose Extensions,
 then Manage Extensions, click Load unpacked, select ex folder and select checker folder, and run flask_app.py in the main directory.
 
