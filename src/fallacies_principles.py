@@ -1,66 +1,123 @@
 fallacy_dict = {
-    "Appeal to Authority（诉诸权威）": {
-        "definition": "用“某位专家/机构说了算”来证明论点正确，忽视权威是否可靠或观点是否已被反驳。",
+    # -- Original 8 entries ---------------------------------------------------
+    "Appeal to Authority": {
+        "definition": "Using “an expert/institution says so” to prove a claim, while ignoring whether the authority is reliable or whether the view has been challenged or refuted.",
         "examples": [
-            "这款保健品肯定有效，毕竟某位两院院士都代言了！",
-            "巴菲特买进这只股票，你还不赶紧跟？",
-            "《自然》期刊上有文章支持生酮饮食，所以你也该马上尝试。"
+            "This supplement must be effective—after all, a renowned academician endorsed it!",
         ]
     },
-    "Appeal to Majority（诉诸多数）": {
-        "definition": "把“大家都这么做/这么想”当作论据，错误地认为流行度等同于正确性。",
+    "Appeal to Majority": {
+        "definition": "Treating “everyone does/thinks so” as evidence, wrongly equating popularity with correctness.",
         "examples": [
-            "抖音上几千万播放的神药视频，怎么可能是假？",
-            "全班同学都选 C++，你还学什么 Python！",
-            "80% 的网民都说该剧神作，你要是不追就是落伍。"
+            "A ‘miracle cure’ video with tens of millions of views on Douyin (TikTok) can’t be fake, right?",
+            "Everyone in the class chose C++; why would you still learn Python?"
         ]
     },
-    "Appeal to Nature（诉诸自然）": {
-        "definition": "认为“天然的”或“自然界产物”必然优于人工或科技产品，把“自然”当成价值标签。",
+    "Appeal to Nature": {
+        "definition": "Assuming that anything “natural” or from nature is inherently better than artificial or technological products; using “natural” as a value label.",
         "examples": [
-            "这款蜂蜜面膜 100% 纯天然，比化学护肤品安全多了。",
-            "拒绝打疫苗，让免疫系统顺其自然才是王道。",
-            "原始饮食法符合人类进化，本就比现代饮食健康。"
+            "This honey face mask is 100% natural, so it’s much safer than ‘chemical’ skincare."
         ]
     },
-    "Appeal to Tradition（诉诸传统）": {
-        "definition": "以“祖祖辈辈都这么做”为论据，忽视环境变化或传统本身的缺陷。",
+    "Appeal to Tradition": {
+        "definition": "Using “we’ve always done it this way” as the argument, ignoring changes in context or flaws in the tradition itself.",
         "examples": [
-            "结婚就得买房，咱们老一辈都是这么干的！",
-            "公司 30 年都手工记账，没必要上什么 ERP 系统。",
-            "冬天必须给孩子喝黄酒鸡蛋，这是老方子，别质疑。"
+            "You have to buy a house to get married—our elders all did it that way!"
         ]
     },
-    "Appeal to Worse Problems（诉诸更糟）": {
-        "definition": "当 A 被批评时，用“B 更严重”来转移视线，好像有更糟的事就能忽略 A。",
+    "Appeal to Worse Problems": {
+        "definition": "When A is criticized, diverting attention by saying “B is worse,” as if a worse issue justifies ignoring A.",
         "examples": [
-            "你说雾霾严重？非洲还有人没饭吃呢，别矫情！",
-            "公司加班？别闹，美国硅谷都 996 了。",
-            "别喷我们球队假摔，隔壁队更脏！"
+            "You say air pollution is severe? People in parts of Africa don’t even have food—stop whining!"
         ]
     },
-    "False Dilemma（假两难）": {
-        "definition": "把复杂议题硬拆为仅有的两个互斥选项，暗示‘不是 X 就是 Y’，排除其他可能。",
+    "False Dilemma": {
+        "definition": "Forcing a complex issue into only two mutually exclusive options—implying ‘either X or Y’—while excluding other possibilities.",
         "examples": [
-            "要么彻底封城，要么完全放开，你选哪个？",
-            "支持我们品牌，就是爱护地球；不支持就是破坏环境。",
-            "孩子不读重点高中，将来只能打零工。"
+            "If you support our brand, you love the planet; if you don’t, you’re harming the environment."
         ]
     },
-    "Hasty Generalization（草率概括）": {
-        "definition": "基于少量或不具代表性的案例，就下普遍结论。",
+    "Hasty Generalization": {
+        "definition": "Drawing a general conclusion from a small or unrepresentative sample.",
         "examples": [
-            "我遇到两个糟糕的出租车司机，北京的司机素质都差！",
-            "这周连跌三天，股市完蛋了，熊市要来了！",
-            "邻居家的孩子玩游戏耽误学习，所以游戏只会害人。"
+            "I met two awful taxi drivers—so all taxi drivers in Beijing have poor manners!"
         ]
     },
-    "Slippery Slope（滑坡谬误）": {
-        "definition": "声称某措施一旦实施，会不可避免地引发一连串更糟糕的后果，中间环节缺乏论证。",
+    "Slippery Slope": {
+        "definition": "Claiming that once a measure is implemented it will inevitably trigger a chain of worse consequences, without justifying the intermediate links.",
         "examples": [
-            "如果允许安乐死，下一步就会鼓励杀老弱病残。",
-            "今天给校园装监控，明天学生就要被 24 小时监视。",
-            "一旦承认同性婚姻，传统婚姻制度会全面崩溃，社会秩序乱套。"
+            "If same-sex marriage is recognized, traditional marriage will collapse and social order will fall apart."
+        ]
+    },
+
+    # -- Additional 10 entries -----------------------------------------------
+    "Ad Hominem": {
+        "definition": "Dismissing an argument by attacking the speaker’s character, background, or motives rather than engaging with the argument itself.",
+        "examples": [
+            "Don’t take his investment advice—he’s gone bankrupt before."
+        ]
+    },
+    "Straw Man": {
+        "definition": "Deliberately misrepresenting or exaggerating an opponent’s position, then refuting that distorted ‘straw man’ instead of the actual view.",
+        "examples": [
+            "You want to reduce military spending? So you want the country to have no defense at all?"
+        ]
+    },
+    "Red Herring": {
+        "definition": "Introducing a topic that seems relevant but is actually off-point, diverting the discussion away from the core issue.",
+        "examples": [
+            "We’re discussing unfair pay. The company’s charitable donations aren’t the main issue."
+        ]
+    },
+    "Tu Quoque": {
+        "definition": "Deflecting by accusing the other side of hypocrisy (“you too”) instead of addressing the argument; a variant of ad hominem.",
+        "examples": [
+            "The teacher says not to be late; a student replies, ‘You were late last time, too.’"
+        ]
+    },
+    "Circular Reasoning": {
+        "definition": "Presupposing the conclusion in the premises—arguing ‘X is true because X is true.’",
+        "examples": [
+            "He’s trustworthy because everything he says is true.",
+            "This phone is the best because there’s no better phone on the market."
+        ]
+    },
+    "False Analogy": {
+        "definition": "Basing a conclusion on an analogy between things that are not similar in the key respects that matter.",
+        "examples": [
+            "Humans are like computers and need a reboot, so you must sleep 8 hours to ‘run’ properly.",
+            "Raising a champion is like forging iron—you just have to hammer hard."
+        ]
+    },
+    "Post Hoc": {
+        "definition": "Concluding that A caused B simply because A happened before B, ignoring other possible factors.",
+        "examples": [
+            "After I wore these sneakers, our team won—they must be lucky shoes.",
+            "Cancer rates rose after the power plant was built, so the plant must be the cause."
+        ]
+    },
+    "Correlation ≠ Causation": {
+        "definition": "Inferring causation from correlation; the relationship could be due to a common cause or coincidence.",
+        "examples": [
+            "Ice cream sales and drowning incidents both rise, so eating ice cream causes drowning."
+        ]
+    },
+    "Appeal to Emotion": {
+        "definition": "Substituting emotional triggers—fear, pity, etc.—for rational argument to sway the conclusion.",
+        "examples": [
+            "If you don’t donate, these poor children will have nothing to eat tonight."
+        ]
+    },
+    "Appeal to Ignorance": {
+        "definition": "Arguing that a claim is true/false because it has not been proven false/true—treating lack of evidence as evidence.",
+        "examples": [
+            "No one has proved that aliens don’t exist, so they must exist."
+        ]
+    },
+    "Sunk Cost": {
+        "definition": "Persisting with a decision because of past investments of time, money, or effort, rather than evaluating current and future value.",
+        "examples": [
+            "I’ve already spent so much money on this car—I can’t sell it now."
         ]
     }
 }

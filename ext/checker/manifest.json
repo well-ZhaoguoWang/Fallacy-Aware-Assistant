@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "🔍Detector",
+  "description": "Right-click to send the selected text and current URL to the local /moderate endpoint, then display the result in a bubble. Supports streaming progress updates.",
+  "version": "0.3.0",
+  "permissions": [
+    "contextMenus", 
+    "activeTab", 
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "all_frames": true
+    }
+  ],
+  "icons": {
+    "16":  "icons/16.png",
+    "32":  "icons/32.png",
+    "128": "icons/128.png"
+  }
+}

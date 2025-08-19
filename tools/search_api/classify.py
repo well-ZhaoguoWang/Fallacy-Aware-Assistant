@@ -2,12 +2,12 @@ import json
 
 def format_json_file(file_path: str, indent: int = 4, ensure_ascii: bool = False):
     """
-    读取 JSON 文件并格式化写回，提升可读性（缩进、换行、美化）
+    Read a JSON file and write it back in a formatted, more readable style (indentation, new lines, pretty-printing).
 
-    参数：
-    - file_path (str): JSON 文件路径
-    - indent (int): 缩进空格数，默认4
-    - ensure_ascii (bool): 是否只保留 ASCII 字符，中文设为 False
+    Parameters:
+    - file_path (str): Path to the JSON file
+    - indent (int): Number of spaces for indentation (default: 4)
+    - ensure_ascii (bool): Whether to escape non-ASCII characters; set to False to keep characters like Chinese
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -16,10 +16,10 @@ def format_json_file(file_path: str, indent: int = 4, ensure_ascii: bool = False
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
 
-        print(f"✅ JSON 文件已格式化：{file_path}")
+        print(f"✅ JSON file formatted: {file_path}")
 
     except Exception as e:
-        print(f"❌ 格式化失败：{e}")
+        print(f"❌ Formatting failed: {e}")
 
 
 if __name__ == "__main__":

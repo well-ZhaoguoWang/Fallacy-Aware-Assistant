@@ -1,218 +1,292 @@
-"""
-使用示例
---------
-moderator = CommentModerator()
-result = moderator.moderate(news_text, comment_text)
-print(result["fallacy"])   # 如 "Appeal to Authority（诉诸权威）"
-print(result["advice"])    # 给评论者的温和建议
-"""
-
 from __future__ import annotations
 
-from pydoc import describe
-from typing import Dict, List, Any, Protocol
 import json
 import textwrap
+from typing import Dict, List, Any, Protocol
 
-from tools.deepseek_service.ask_deepseek import ask_deepseek
-from tools.search_api.fetch_news import fetch_news_main_text
-from tools.search_api.serp import search_google
+import setting
 from src.fallacies_principles import fallacy_dict
-
-# --------------------------------------------------------------------------- #
-# 0.  逻辑谬误目录（如需扩展可在此添加）                                       #
-# --------------------------------------------------------------------------- #
+from tools.deepseek_service.ask_deepseek import ask_deepseek
+from tools.search_api.serp import search_google
 from tools.utils import load_json
 
+# --------------------------------------------------------------------------- #
+# 0.  Basic configuration                                                     #
+# --------------------------------------------------------------------------- #
+DEFAULT_LANGUAGE = setting.language
+
+# FALLACIES: list[dict[str, str]] = [
+#     # --- A ---
+#     {"id": "abusive_ad_hominem", "label": "Abusive Ad Hominem"},
+#     {"id": "ad_populum", "label": "Ad Populum (Appeal to Majority)"},
+#     {"id": "appeal_to_authority", "label": "Appeal to Authority"},
+#     {"id": "appeal_to_nature", "label": "Appeal to Nature"},
+#     {"id": "appeal_to_tradition", "label": "Appeal to Tradition"},
+#     {"id": "appeal_to_angry", "label": "Appeal to Anger"},
+#     {"id": "appeal_to_fear", "label": "Appeal to Fear"},
+#     {"id": "appeal_to_pity", "label": "Appeal to Pity"},
+#     {"id": "appeal_to_positive_emotion", "label": "Appeal to Positive Emotion"},
+#     {"id": "appeal_to_ridicule", "label": "Appeal to Ridicule"},
+#     {"id": "appeal_to_worse_problems", "label": "Appeal to Worse Problems"},
+#     {"id": "appeal_to_purity", "label": "Appeal to Purity (No True Scotsman)"},
+#     {"id": "appeal_to_novelty", "label": "Appeal to Novelty"},
+#     {"id": "appeal_to_consequences", "label": "Appeal to Consequences"},
+#     {"id": "appeal_to_emotion", "label": "Appeal to Emotion"},  # general catch-all
+#
+#     # --- B / C ---
+#     {"id": "burden_shifting", "label": "Shifting the Burden of Proof"},
+#     {"id": "causal_oversimplification", "label": "Causal Oversimplification"},
+#     {"id": "cherry_picking", "label": "Cherry Picking (Texas Sharpshooter)"},
+#     {"id": "circular_reasoning", "label": "Circular Reasoning"},
+#     {"id": "complex_question", "label": "Loaded / Complex Question"},
+#     {"id": "composition", "label": "Fallacy of Composition"},
+#     {"id": "correlation_causation", "label": "Correlation ≠ Causation"},
+#
+#     # --- D / E / F ---
+#     {"id": "division", "label": "Fallacy of Division"},
+#     {"id": "equivocation", "label": "Equivocation"},
+#     {"id": "false_analogy", "label": "False Analogy"},
+#     {"id": "false_causality", "label": "False Causality"},
+#     {"id": "false_dilemma", "label": "False Dilemma"},
+#     {"id": "false_equivalence", "label": "False Equivalence"},
+#
+#     # --- G / H ---
+#     {"id": "genetic_fallacy", "label": "Genetic Fallacy"},
+#     {"id": "guilt_by_association", "label": "Guilt by Association"},
+#     {"id": "hasty_generalization", "label": "Hasty Generalization"},
+#
+#     # --- M / P ---
+#     {"id": "moving_the_goalposts", "label": "Moving the Goalposts"},
+#     {"id": "poisoning_the_well", "label": "Poisoning the Well"},
+#     {"id": "post_hoc", "label": "Post Hoc"},
+#
+#     # --- R / S / T ---
+#     {"id": "red_herring", "label": "Red Herring"},
+#     {"id": "slippery_slope", "label": "Slippery Slope"},
+#     {"id": "special_pleading", "label": "Special Pleading"},
+#     {"id": "straw_man", "label": "Straw Man"},
+#     {"id": "sunk_cost", "label": "Sunk Cost"},
+#     {"id": "tone_policing", "label": "Tone Policing"},
+#     {"id": "tu_quoque", "label": "Tu Quoque"},
+#     {"id": "two_wrongs", "label": "Two Wrongs Make a Right"},
+# ]
 FALLACIES: List[Dict[str, Any]] = [
-    {"id": "appeal_to_authority", "label": "Appeal to Authority（诉诸权威）"},
-    {"id": "appeal_to_majority", "label": "Appeal to Majority（诉诸多数）"},
-    {"id": "appeal_to_nature", "label": "Appeal to Nature（诉诸自然）"},
-    {"id": "appeal_to_tradition", "label": "Appeal to Tradition（诉诸传统）"},
-    {"id": "appeal_to_worse", "label": "Appeal to Worse Problems（诉诸更糟）"},
-    {"id": "false_dilemma", "label": "False Dilemma（假两难）"},
-    {"id": "hasty_generalization", "label": "Hasty Generalization（草率概括）"},
-    {"id": "slippery_slope", "label": "Slippery Slope（滑坡谬误）"},
+    {"id": "appeal_to_authority", "label": "Appeal to Authority"},
+    {"id": "appeal_to_majority", "label": "Appeal to Majority"},
+    {"id": "appeal_to_nature", "label": "Appeal to Nature"},
+    {"id": "appeal_to_tradition", "label": "Appeal to Tradition"},
+    {"id": "appeal_to_worse_problems", "label": "Appeal to Worse Problems"},
+    {"id": "false_dilemma", "label": "False Dilemma"},
+    {"id": "hasty_generalization", "label": "Hasty Generalization"},
+    {"id": "slippery_slope", "label": "Slippery Slope"},
+    {"id": "ad_hominem", "label": "Ad Hominem"},
+    {"id": "straw_man", "label": "Straw Man"},
+    {"id": "red_herring", "label": "Red Herring"},
+    {"id": "tu_quoque", "label": "Tu Quoque"},
+    {"id": "circular_reasoning", "label": "Circular Reasoning"},
+    {"id": "false_analogy", "label": "False Analogy"},
+    {"id": "post_hoc", "label": "Post Hoc"},
+    {"id": "correlation_causation", "label": "Correlation ≠ Causation"},
+    {"id": "appeal_to_emotion", "label": "Appeal to Emotion"},
+    {"id": "appeal_to_ignorance", "label": "Appeal to Ignorance"},
 ]
 
-
 # --------------------------------------------------------------------------- #
-# 1.  Agent 协议                                                             #
+# 1.  Agent protocol                                                          #
 # --------------------------------------------------------------------------- #
-
 class Agent(Protocol):
-    """所有智能体需遵循的最小接口"""
     name: str
 
     def run(self, **kwargs) -> Any: ...
 
 
 # --------------------------------------------------------------------------- #
-# 2.  具体智能体实现                                                         #
+# 2.  Concrete agent implementations                                          #
 # --------------------------------------------------------------------------- #
-
 class FallacyDetectorAgent:
-    """
-    负责调用大模型判断评论是否含有逻辑谬误，
-    若存在，则输出谬误类型及简要原因。
-    """
     name = "FallacyDetector"
     principle = str(fallacy_dict)
-    PROMPT_TEMPLATE = textwrap.dedent(
-        """
-        你是逻辑评论分析助手。请阅读下面新闻背景与评论，判断评论是否包含以下任一逻辑谬误：
+    #
+    PROMPT_TEMPLATE = textwrap.dedent("""
+        You are a logical comment analysis assistant. Please respond in {language}.
+
+        Read the news background and the comment below, and determine whether the comment contains any of the following logical fallacies:
         {fallacy_list}
-        
-        各类谬误详细解释如下：
+
+        Detailed explanations of each fallacy:
         {fallacies}
 
-        输出 JSON：
+        Output JSON:
         {{
-          "exists": <bool>,              # 是否存在逻辑谬误
-          "fallacy_id": "<id 或 null>",  # 只能取 {ids} 中的值
-          "reason": "<中文简要原因>"
+          "exists": <bool>,               # Whether a logical fallacy exists
+          "fallacy_id": "<id or null>",   # Must be one of {ids}
+          "reason": "<brief reason, in the same language as above>"
         }}
-
-        新闻背景：
+        News background:
         <<NEWS>>
         {news}
 
-        评论：
+        Comment:
         <<COMMENT>>
         {comment}
     """).strip()
 
-    def run(self, news: str, comment: str) -> Dict[str, Any]:
-        ids = [f["id"] for f in FALLACIES]
+    def run(self, news: str, comment: str, language: str = DEFAULT_LANGUAGE, fallacies=FALLACIES) -> Dict[str, Any]:
+        ids = [f["id"] for f in fallacies]
         prompt = self.PROMPT_TEMPLATE.format(
+            language=language,
             fallacy_list=", ".join(ids),
             ids="|".join(ids),
             news=news,
             comment=comment,
             fallacies=fallacy_dict,
         )
-        raw = ask_deepseek(prompt)  # 调用大模型
-        # TODO 这里后面得加一个json schema 防止解析失败
-        raw = raw.replace("json", "")
-        raw = raw.replace("```", "")
+        raw = ask_deepseek(prompt, language=language, model=setting.detect_model)
+        raw = raw.replace("```", "").replace("json", "")
         try:
             return json.loads(raw)
         except json.JSONDecodeError:
-            # 若解析失败，返回默认结果
             return {"exists": False, "fallacy_id": None, "reason": ""}
 
 
 class EvidenceCollectorAgent:
-    """
-    若检测到逻辑谬误，使用搜索接口查找 1~2 条相关科普/解释，方便引用。
-    """
     name = "EvidenceCollector"
-    SEARCH_TEMPLATE = "{fallacy_cn} 逻辑谬误 解释 示例"
 
-    def run(self, fallacy_id: str | None, comment, news) -> List[str]:
+    def run(self, fallacy_id: str | None, comment: str, news: str,
+            language: str = DEFAULT_LANGUAGE) -> List[str]:
         if not fallacy_id:
             return []
+
         f_desc = ""
         for f in FALLACIES:
-            if f.get("id") == fallacy_id:
-                label = f.get("label")
-                f_desc = fallacy_dict.get(label)
-        prompt = (
-            "下面的评论发生了逻辑谬误，"
-            f"\n类型为{fallacy_id}，谬误解释：{str(f_desc)}"
-            f"\n谬误原文为：{comment}"
-            f"\n谬误背景信息为：{news}"
-            "下面你需要生成1个搜索关键词来佐证这确实是一个谬误"
-            "请仅输出搜索关键词")
-        keyword = ask_deepseek(prompt)
+            if f["id"] == fallacy_id:
+                f_desc = fallacy_dict.get(f["label"], "")
+                break
 
-        hits = search_google(keyword)  # 加个language入参即可改语言
-        if len(hits) == 0:
+        prompt = (
+            f"Please respond in {language}.\n"
+            "The following comment contains a logical fallacy:\n"
+            f"- Type: {fallacy_id}\n"
+            f"- Fallacy explanation: {f_desc}\n"
+            f"- Comment: {comment}\n"
+            f"- News background: {news}\n"
+            "Please analyze what kind of keywords would help verify that this judgment is correct.\n"
+            "Generate 1 commonly used search keyword for a search engine that would help prove the comment belongs to this fallacy type.\n"
+            "Output only the keyword."
+        )
+        keyword = ask_deepseek(prompt, language=language, model=setting.evidence_model).strip()
+        hits = search_google(keyword, language=language)
+
+        if not hits:
             return []
-        else:
-            if hits.get("answerBox", ""):
-                return [hits.get("answerBox")]
-            else:
-                ans = hits.get("organic")
-                return ans[:2]
+        if hits.get("answerBox"):
+            return [hits["answerBox"]]
+        return hits.get("organic", [])[:2]
 
 
 class AdviceAgent:
-    """
-    根据检测结果，给评论者提供<120 字>以内的温和建议。
-    """
     name = "AdviceAgent"
-
     PROMPT_TEMPLATE = textwrap.dedent("""
-        你是一位友善的评论区版主。请在不激起防御心的前提下，
-        对下面评论给出暖心建议（≤120 字）：
-        1. 先肯定对方情绪或关注点；
-        2. 委婉指出其可能涉及的逻辑谬误：{fallacy_label}；
-        3. 提出一种友好的查证或思考方式；
-        避免使用“你错了”等指责性语句，尽量使用“也许你可以…”等表达。
-        评论：
-        {comment}
-        可以佐证的网络查询结果如下
+        Please respond in {language}.
+
+        You are a master of logic and an experienced psychologist. 
+        Your goal is to help the user refine reasoning without confrontation or coercion. 
+        Preserve user autonomy, avoid shaming, and prefer collaborative language. 
+        Ground suggestions in evidence when available.. 
+        You found a logical fallacy in a comment:
+        - Type: {fallacy_label}
+        - Reason: {reason}
+
+        Supporting material:
         {evidence}
-        请输出暖心建议
+
+        In ≤100 words, write a friendly suggestion to the commenter, following these rules:
+        1. Acknowledge their emotion or concern first.
+        2. Point out the specific fallacy and give evidence.
+        3. Attach evidence as hyperlinks in HTML suitable for front-end rendering, e.g., <a href=\"url\">xxx</a>. Output only the body of the suggestion.
+        4. Keep it as a gentle, persuasive nudge.
+        
     """).strip()
-
-    def run(self, comment: str, fallacy_id: str | None, evidence) -> str:
-        label = next((f["label"] for f in FALLACIES if f["id"] == fallacy_id), "未知类型")
-        prompt = self.PROMPT_TEMPLATE.format(fallacy_label=label, comment=comment, evidence=evidence)
-        return ask_deepseek(prompt)
+#-----------------------------------------#
+    #     - Voice & Tone: warm, tactful, collaborative, and confident-but-tentative (e.g., “might,” “perhaps,” “consider”).
+    #     - Length: 45–120 words total.
+    #     - Content order (recommended):
+    #     1) Brief empathy/acknowledgment.
+    #     2) Name the issue in plain words linked to {type} (avoid jargon unless helpful).
+    #     3) One-sentence rationale anchored in {reasoning}.
+    #     4) If suitable, weave in *one* short piece of evidence as an inline HTML link.
+    #     5) Offer a concise, improved rephrase or next step.
+    #     6) End with an open, non-leading question or gentle invitation to reconsider.
+    #     - Do:
+    #         - Be specific and actionable.
+    #         - Keep the focus on the claim, not the person.
+    #         - Use a single, high-quality citation if {evidence_list} contains a strong item.
+    #     - Don’t:
+    #         - Fabricate facts or links.
+    #         - Sound accusatory, sarcastic, or absolute.
+    #         - Overwhelm with multiple citations or long quotes.
+#-----------------------------------------#
+    def run(self, comment: str, fallacy_id: str | None, reason: str | None,
+            evidence: List[str], language: str = DEFAULT_LANGUAGE) -> str:
+        label = next((f["label"] for f in FALLACIES if f["id"] == fallacy_id), "Unknown type")
+        prompt = self.PROMPT_TEMPLATE.format(
+            language=language,
+            fallacy_label=label,
+            reason=reason or "",
+            evidence="\n".join(map(str, evidence)) or "None",
+        )
+        return ask_deepseek(prompt, language=language, model=setting.suggestion_model).strip()
 
 
 # --------------------------------------------------------------------------- #
-# 3.  Orchestrator / 调度器                                                  #
+# 3.  Orchestrator                                                            #
 # --------------------------------------------------------------------------- #
-
 class CommentModerator:
-    """
-    高层调度器：按顺序调用各智能体，返回统一结构化结果。
-    """
-
-    def __init__(self) -> None:
+    def __init__(self, language: str = DEFAULT_LANGUAGE) -> None:
+        self.language = language
         self.detector = FallacyDetectorAgent()
         self.collector = EvidenceCollectorAgent()
         self.advisor = AdviceAgent()
 
-    def moderate(self, news: str, comment: str) -> Dict[str, Any]:
-        detection = self.detector.run(news=news, comment=comment)
+    def moderate(self, news: str, comment: str) -> str | Any:
+        detection = self.detector.run(news=news, comment=comment, language=self.language)
         fallacy_id = detection.get("fallacy_id")
+        reason = detection.get("reason", "")
 
-        evidence = self.collector.run(fallacy_id, comment, news)
-        advice = (
-            self.advisor.run(comment=comment, fallacy_id=fallacy_id, evidence=evidence)
-            if detection.get("exists") else
-            "未发现明显逻辑问题"
-        )
+        # If you don't want to use evidence collection, pass an empty list:
+        evidence = []  # Or enable: self.collector.run(fallacy_id, comment, news, language=self.language)
 
-        return {
-            "fallacy": next((f["label"] for f in FALLACIES if f["id"] == fallacy_id), None)
-            if detection.get("exists") else None,
-            "reason": detection.get("reason"),
-            "evidence": evidence,
-            "advice": advice
-        }
+        if detection.get("exists"):
+            # Get the fallacy label
+            fallacy_label = next(
+                (f["label"] for f in FALLACIES if f["id"] == fallacy_id),  # Parentheses must be correctly closed here.
+                "Unknown Fallacy"
+            )
+            # Generate a friendly suggestion
+            advice = self.advisor.run(comment, fallacy_id, reason, evidence, language=self.language)
+            return f"{fallacy_label}\n\n{advice}"
+        else:
+            return "No obvious fallacy detected"
 
-
-# --------------------------------------------------------------------------- #
-# 4.  测试示例（正式部署时请移除此段）                                        #
-# --------------------------------------------------------------------------- #
-
+        # return {
+        #     "fallacy": next((f["label"] for f in FALLACIES if f["id"] == fallacy_id), None)
+        #     if detection.get("exists") else None,
+        #     "reason": reason,
+        #     "evidence": evidence,
+        #     "advice": advice
+        # }
 
 if __name__ == "__main__":
     moderator = CommentModerator()
-    cocolafa_data = load_json("../data/cocolafa/dev.json")
+    cocolafa_data = load_json("../data/cocolafa/test.json")
     news_demo = cocolafa_data[0]
     title = news_demo["title"]
     link = news_demo["link"]
-    content = fetch_news_main_text(link)
     for comment in news_demo["comments"]:
         comment_demo = comment["comment"].strip()
         fall = comment.get("fallacy", "")
-        print(f"\n谬误类型：{fall}")
+        print(f"\nGround-truth fallacy type: {fall}")
         result = moderator.moderate(news_demo, comment_demo)
-        print("\n" + title + "\n" + link + "\n评论：\n" + comment_demo + "\n结果：")
+        print("\n" + title + "\n" + link + "\nComment:\n" + comment_demo + "\nResult:")
         print(json.dumps(result, ensure_ascii=False, indent=2))
+        break
