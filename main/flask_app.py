@@ -53,7 +53,7 @@ def health_check():
     return jsonify({"status": "running", "message": "Flask service is healthy"})
 
 
-# Original sync endpoint (unchanged behavior)
+# Original sync endpoint
 @app.route("/moderate", methods=["POST"])
 @limiter.limit("3/10 seconds")
 def moderate_endpoint():
