@@ -36,6 +36,7 @@ def _make_sig(news_text: str, comment_text: str) -> str:
 
 @lru_cache(maxsize=4_096)
 def cached_moderate(news_text: str, comment_text: str):
+    """LRU-cached moderation call."""
     return moderator.moderate(news_text, comment_text)
 
 
@@ -46,18 +47,16 @@ limiter = Limiter(
 )
 
 
-# Root endpoint for floating window to check service status
 @app.route("/", methods=["GET"])
 def health_check():
     """Health check endpoint."""
     return jsonify({"status": "running", "message": "Flask service is healthy"})
 
 
-# Original sync endpoint
 @app.route("/moderate", methods=["POST"])
 @limiter.limit("3/10 seconds")
 def moderate_endpoint():
-    """Synchronous single-comment analysis endpoint."""
+    """Synchronous single-comment analysis endpoint (JSON)."""
     data = request.get_json(force=True, silent=True) or {}
     print(data)
     news_text = data.get("news_text", "")
@@ -74,11 +73,10 @@ def moderate_endpoint():
         return jsonify({"ok": False, "msg": f"Processing failed: {e}"}), 500
 
 
-# Streaming single-comment analysis
 @app.route("/moderate_stream", methods=["POST"])
 @limiter.limit("3/10 seconds")
 def moderate_stream():
-    """Streaming single-comment analysis endpoint."""
+    """Single-comment analysis via Server-Sent Events (SSE)."""
     data = request.get_json(force=True, silent=True) or {}
     news_text = data.get("news_text", "")
     comment_text = data.get("comment_text", "")
@@ -89,7 +87,7 @@ def moderate_stream():
 
     def generate_progress():
         try:
-            # Simulated steps to show progress
+            # Progress events (SSE)
             steps = [
                 {"progress": 10, "message": "🔍 Initializing analysis...", "status": "processing"},
                 {"progress": 25, "message": "📊 Processing comment text...", "status": "processing"},
@@ -103,10 +101,8 @@ def moderate_stream():
                 yield f"data: {json.dumps(step)}\n\n"
                 time.sleep(1.2)
 
-            # Actual analysis
             result = cached_moderate(news_text, comment_text)
 
-            # Final result
             final_result = {
                 "progress": 100,
                 "message": "✅ Analysis complete!",
@@ -144,11 +140,10 @@ def detect_all():
     return jsonify({"ok": True, "data": fetch_reddit_comments(url)})
 
 
-# Streaming batch analysis
 @app.route("/detect_all_stream", methods=["POST"])
 @limiter.limit("3/10 seconds")
 def detect_all_stream():
-    """Streaming batch analysis endpoint."""
+    """Batch analysis via Server-Sent Events (SSE)."""
     data = request.get_json(force=True, silent=True) or {}
     url = data.get("url", "")
 
@@ -157,6 +152,7 @@ def detect_all_stream():
 
     def generate_batch_progress():
         try:
+            # Progress events (SSE)
             steps = [
                 {"progress": 5, "message": "🌐 Fetching Reddit content...", "status": "processing"},
                 {"progress": 15, "message": "📃 Parsing comments structure...", "status": "processing"},
@@ -172,7 +168,6 @@ def detect_all_stream():
                 yield f"data: {json.dumps(step)}\n\n"
                 time.sleep(2.5)
 
-            # Actual batch analysis
             result = fetch_reddit_comments(url)
 
             final_result = {
@@ -203,17 +198,12 @@ def detect_all_stream():
 
 
 def launch_floating_window():
-    """Launch the floating-window UI."""
-
+    """Start the floating-window UI in a background thread."""
     def run_window():
-        # Wait for the Flask service to start up
         time.sleep(2)
-
-        # Check that the floating-window file exists
         floating_window_file = "floating_window.py"
         if os.path.exists(floating_window_file):
             try:
-                # Start the floating window
                 print("Launching floating-window app...")
                 subprocess.Popen([sys.executable, floating_window_file])
                 print("Floating-window app started")
@@ -222,18 +212,12 @@ def launch_floating_window():
         else:
             print(f"Floating-window file {floating_window_file} not found")
 
-    # Start the floating window in a background thread
     threading.Thread(target=run_window, daemon=True).start()
 
 
-# -- 3. Entry point --
 if __name__ == "__main__":
     print("Starting the Flask service...")
-
-    # Launch the floating window
     launch_floating_window()
-
-    # host='0.0.0.0' makes it reachable from Docker containers / remote machines;
-    # debug=False prevents the server from starting twice due to the reloader
+    # host='0.0.0.0' allows access from containers/remote machines; debug=False prevents double start by reloader
     print("Flask service is running; the floating window will appear shortly...")
     app.run(host="0.0.0.0", port=5000, debug=False)
