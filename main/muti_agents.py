@@ -259,7 +259,7 @@ class CommentModerator:
         if detection.get("exists"):
             # Get the fallacy label
             fallacy_label = next(
-                (f["label"] for f in FALLACIES if f["id"] == fallacy_id),  # Parentheses must be correctly closed here.
+                (f["label"] for f in FALLACIES if f["id"] == fallacy_id),
                 "Unknown Fallacy"
             )
             # Generate a friendly suggestion
